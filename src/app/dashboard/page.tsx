@@ -6,10 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   MessageSquare,
   FileText,
-  Phone,
-  BarChart3,
   Zap,
-  Users,
   Settings,
   Bot,
   Mic,
