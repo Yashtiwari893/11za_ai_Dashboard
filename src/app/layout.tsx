@@ -4,8 +4,7 @@ import "./globals.css";
 import SupabaseProvider from "@/providers/supabase-provider";
 import { createClient } from "@/utils/supabase/server";
 import LiveVoiceAgentInitializer from "@/components/live-voice-agent-initializer";
-import Sidebar from "@/components/sidebar";
-import Footer from "@/components/footer";
+import ConditionalLayout from "@/components/conditional-layout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,17 +38,9 @@ export default async function RootLayout({
       >
         <SupabaseProvider session={session}>
           <LiveVoiceAgentInitializer />
-          <div className="flex flex-col min-h-screen">
-            <div className="flex flex-1 h-screen bg-gradient-to-br from-white via-blue-50 to-green-50 dark:from-[#0D163F] dark:via-[#1a1f4a] dark:to-[#2a2f5a]">
-              <Sidebar />
-              <main className="flex-1 overflow-auto bg-gradient-to-br from-white via-blue-50 to-green-50 dark:from-[#0D163F] dark:via-[#1a1f4a] dark:to-[#2a2f5a] lg:ml-0">
-                <div className="w-full">
-                  {children}
-                </div>
-              </main>
-            </div>
-            <Footer />
-          </div>
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
         </SupabaseProvider>
       </body>
     </html>
