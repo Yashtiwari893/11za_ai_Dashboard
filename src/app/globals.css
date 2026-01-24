@@ -1,0 +1,220 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #ffffff;
+  --foreground: #0D163F;
+  --card: #ffffff;
+  --card-foreground: #0D163F;
+  --popover: #ffffff;
+  --popover-foreground: #0D163F;
+  --primary: #0D163F;
+  --primary-foreground: #ffffff;
+  --secondary: #09AF72;
+  --secondary-foreground: #ffffff;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  --accent: #09AF72;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #0D163F;
+  --chart-1: #0D163F;
+  --chart-2: #09AF72;
+  --chart-3: #7bdcb5;
+  --chart-4: #64748b;
+  --chart-5: #94a3b8;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0D163F;
+  --sidebar-primary: #0D163F;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f8fafc;
+  --sidebar-accent-foreground: #0D163F;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #0D163F;
+}
+
+.dark {
+  --background: #0D163F;
+  --foreground: #ffffff;
+  --card: #1a1f4a;
+  --card-foreground: #ffffff;
+  --popover: #1a1f4a;
+  --popover-foreground: #ffffff;
+  --primary: #09AF72;
+  --primary-foreground: #ffffff;
+  --secondary: #7bdcb5;
+  --secondary-foreground: #0D163F;
+  --muted: #2a2f5a;
+  --muted-foreground: #94a3b8;
+  --accent: #09AF72;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --border: #2a2f5a;
+  --input: #2a2f5a;
+  --ring: #09AF72;
+  --chart-1: #0D163F;
+  --chart-2: #09AF72;
+  --chart-3: #7bdcb5;
+  --chart-4: #64748b;
+  --chart-5: #94a3b8;
+  --sidebar: #0D163F;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #09AF72;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1a1f4a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2a2f5a;
+  --sidebar-ring: #09AF72;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom prose styles for markdown rendering */
+.prose {
+  color: inherit;
+  max-width: 65ch;
+}
+
+.prose p {
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+  line-height: 1.6;
+}
+
+.prose strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+.prose ul,
+.prose ol {
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+  line-height: 1.6;
+}
+
+.prose ul > li {
+  list-style-type: disc;
+}
+
+.prose ol > li {
+  list-style-type: decimal;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+.prose h1 {
+  font-size: 1.5em;
+}
+
+.prose h2 {
+  font-size: 1.25em;
+}
+
+.prose h3 {
+  font-size: 1.1em;
+}
+
+.prose code {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.125em 0.25em;
+  border-radius: 0.25em;
+  font-size: 0.9em;
+}
+
+.prose pre {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.75em;
+  border-radius: 0.375em;
+  overflow-x: auto;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+
+.prose pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.prose blockquote {
+  border-left: 3px solid rgba(0, 0, 0, 0.2);
+  padding-left: 1em;
+  font-style: italic;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+
+.prose-sm {
+  font-size: 0.875rem;
+}
+
+.prose-sm p,
+.prose-sm li {
+  line-height: 1.5;
+}
