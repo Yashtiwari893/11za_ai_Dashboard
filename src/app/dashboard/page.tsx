@@ -214,36 +214,6 @@ export default function DashboardPage() {
                       </div>
                     )}
 
-                    {feature.capabilities && (
-                      <div>
-                        <p className="text-sm font-medium mb-2 text-[#0D163F]">
-                          WhatsApp Features:
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {feature.capabilities.map((cap, i) => (
-                            <Badge key={i} variant="outline" className="text-xs border-[#09AF72] text-[#09AF72]">
-                              {cap}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {feature.metrics && (
-                      <div>
-                        <p className="text-sm font-medium mb-2 text-[#0D163F]">
-                          Analytics:
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {feature.metrics.map((metric, i) => (
-                            <Badge key={i} variant="outline" className="text-xs border-[#64748b] text-[#64748b]">
-                              {metric}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
                     <Button
                       asChild
                       className="w-full mt-4 bg-[#0D163F] hover:bg-[#09AF72] text-white transition-colors duration-300 text-sm"
