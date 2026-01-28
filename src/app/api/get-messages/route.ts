@@ -15,7 +15,7 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const formatted = data.map((item) => ({
+    const formatted = data.map((item: any) => ({
         role: item.role,
         content: item.content,
     }));

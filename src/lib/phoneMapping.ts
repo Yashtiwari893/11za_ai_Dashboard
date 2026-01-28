@@ -39,7 +39,7 @@ export async function getFilesForPhoneNumber(phoneNumber: string): Promise<strin
         return [];
     }
 
-    return data?.map(row => row.file_id).filter(Boolean) || [];
+    return data?.map((row: any) => row.file_id).filter(Boolean) || [];
 }
 
 /**
@@ -137,7 +137,7 @@ export async function getVoiceFAQsForPhoneNumber(phoneNumber: string): Promise<s
         return [];
     }
 
-    return data?.map(row => row.id) || [];
+    return data?.map((row: any) => row.id) || [];
 }
 
 /**

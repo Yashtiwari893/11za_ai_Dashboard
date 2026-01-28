@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { supabase } from "@/lib/supabaseClient";
 import { embedText } from "@/lib/embeddings";
-import { retrieveRelevantChunks } from "@/lib/retrieval";
+import { retrieveRelevantChunks, retrieveRelevantChunksDualSource } from "@/lib/retrieval";
 
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY!,
@@ -11,7 +11,7 @@ const groq = new Groq({
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { session_id, message, file_id } = body;
+        const { session_id, message, file_id, phone_number } = body;
 
         if (!session_id || !message) {
             return NextResponse.json(
@@ -31,7 +31,16 @@ export async function POST(req: Request) {
         }
 
         // 2. Retrieve relevant chunks
-        const matches = await retrieveRelevantChunks(queryEmbedding, file_id, 5);
+        // If phone_number is provided, use dual-source retrieval (PDF + approved calls)
+        // Otherwise, use traditional file-based retrieval
+        let matches: { id: string; chunk: string; similarity: number }[] = [];
+        if (phone_number) {
+            matches = await retrieveRelevantChunksDualSource(queryEmbedding, phone_number, 10);
+        } else if (file_id) {
+            matches = await retrieveRelevantChunks(queryEmbedding, file_id, 5);
+        } else {
+            matches = [];
+        }
 
         const contextText = matches.map((m) => m.chunk).join("\n\n");
 
@@ -42,7 +51,7 @@ export async function POST(req: Request) {
             .eq("session_id", session_id)
             .order("created_at", { ascending: true });
 
-        const history = (historyRows || []).map(m => ({
+        const history = (historyRows || []).map((m: any) => ({
             role: m.role,
             content: m.content
         }));

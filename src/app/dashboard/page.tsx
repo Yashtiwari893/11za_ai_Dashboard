@@ -9,15 +9,92 @@ import {
   Zap,
   Settings,
   Bot,
+  Sheet,
   Mic,
   Globe,
   CheckCircle,
   TrendingUp,
-  Activity
+  Activity,
+  Phone
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+
+interface DashboardStats {
+  totalConversations: number;
+  voiceMessages: number;
+  activeIntegrations: number;
+  responseAccuracy: number;
+  loading: boolean;
+}
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalConversations: 0,
+    voiceMessages: 0,
+    activeIntegrations: 0,
+    responseAccuracy: 0,
+    loading: true
+  });
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  async function fetchDashboardStats() {
+    try {
+      // Fetch total conversations (from messages table)
+      const { data: messagesData, count: messagesCount, error: messagesError } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true });
+
+      // Fetch voice messages (call recordings with status approved)
+      let voiceCount = 0;
+      try {
+        const { count, error: voiceError } = await supabase
+          .from("call_recordings")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "11za_related");
+        voiceCount = count || 0;
+      } catch (voiceErr) {
+        console.warn("call_recordings table not available, skipping voice count");
+      }
+
+      // Fetch active integrations (phone settings with config)
+      const { count: phoneSettingsCount, error: phoneError } = await supabase
+        .from("phone_settings")
+        .select("*", { count: "exact", head: true });
+
+      // Calculate response accuracy based on successful messages
+      const { data: successfulMessages, error: accuracyError } = await supabase
+        .from("messages")
+        .select("id")
+        .eq("role", "assistant");
+
+      const accuracy = messagesCount && messagesCount > 0 
+        ? Math.round((successfulMessages?.length || 0) / messagesCount * 100)
+        : 0;
+
+      setStats({
+        totalConversations: messagesCount || 0,
+        voiceMessages: voiceCount,
+        activeIntegrations: phoneSettingsCount || 0,
+        responseAccuracy: accuracy,
+        loading: false
+      });
+    } catch (error) {
+      console.error("Dashboard stats error:", error);
+      setStats({
+        totalConversations: 0,
+        voiceMessages: 0,
+        activeIntegrations: 0,
+        responseAccuracy: 0,
+        loading: false
+      });
+    }
+  }
+
   const features = [
     {
       title: "AI Chatbot",
@@ -46,15 +123,24 @@ export default function DashboardPage() {
       status: "Active",
       formats: ["PDF", "JPG", "PNG"]
     },
-    // {
-    //   title: "WhatsApp Integration",
-    //   description: "Seamless WhatsApp Business API integration",
-    //   icon: Phone,
-    //   href: "/chat",
-    //   color: "bg-gradient-to-br from-[#0D163F] to-[#7bdcb5]",
-    //   status: "Active",
-    //   capabilities: ["Auto-respond", "Voice notes", "Media"]
-    // },
+    {
+      title: "Call Recordings",
+      description: "Upload and process call recordings with AI transcription",
+      icon: Phone,
+      href: "/calls",
+      color: "bg-gradient-to-br from-[#6366f1] to-[#8b5cf6]",
+      status: "Active",
+      formats: ["MP3", "WAV", "OGG"]
+    },
+        {
+      title: "Sheet Or Doc Integration",
+      description: "Integrate Google Sheets or Docs for dynamic data access",
+      icon: Sheet,
+      href: "https://whatsapp-ai-chatbot-google-sheet-in.vercel.app/files",
+      color: "bg-gradient-to-br from-[#7bdcb5] to-[#09AF72]",
+      status: "Active",
+      formats: ["Google Sheets", "Google Docs"]
+    },
     {
       title: "Shopify Integration",
       description: "E-commerce platform integration for product support",
@@ -75,11 +161,11 @@ export default function DashboardPage() {
     // }
   ];
 
-  const stats = [
-    { label: "Total Conversations", value: "1,247", icon: MessageSquare, trend: "+12%" },
-    { label: "Voice Messages", value: "89", icon: Mic, trend: "+8%" },
-    { label: "Active Integrations", value: "3", icon: Zap, trend: "100%" },
-    { label: "Response Accuracy", value: "94%", icon: TrendingUp, trend: "+2%" }
+  const statsDisplay = [
+    { label: "Total Conversations", value: stats.totalConversations.toString(), icon: MessageSquare, trend: "Tracked in real-time" },
+    { label: "Voice Messages", value: stats.voiceMessages.toString(), icon: Mic, trend: "Approved call recordings" },
+    { label: "Active Integrations", value: stats.activeIntegrations.toString(), icon: Zap, trend: "Active phone groups" },
+    { label: "Response Accuracy", value: `${stats.responseAccuracy}%`, icon: TrendingUp, trend: "Assistant responses" }
   ];
 
   return (
@@ -112,7 +198,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 lg:mb-8">
-          {stats.map((stat, index) => (
+          {statsDisplay.map((stat, index) => (
             <Card key={index} className="bg-white/80 backdrop-blur-sm border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
@@ -121,10 +207,10 @@ export default function DashboardPage() {
                       {stat.label}
                     </p>
                     <p className="text-2xl sm:text-3xl font-bold mt-1 text-[#0D163F]">
-                      {stat.value}
+                      {stats.loading ? "..." : stat.value}
                     </p>
                     <p className="text-xs sm:text-sm mt-1 text-[#09AF72]">
-                      {stat.trend} from last month
+                      {stat.trend}
                     </p>
                   </div>
                   <div className="p-2 sm:p-3 rounded-full bg-[#09AF72]/10">

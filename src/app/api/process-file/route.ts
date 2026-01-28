@@ -221,7 +221,7 @@ export async function POST(req: Request) {
             .eq("phone_number", phoneNumber);
 
         // Check if there's a mapping without a file_id (created via generate-system-prompt)
-        const placeholderMapping = existingMappings?.find(m => m.file_id === null);
+        const placeholderMapping = existingMappings?.find((m: any) => m.file_id === null);
 
         if (placeholderMapping) {
             // Update the existing placeholder mapping with the file_id and credentials

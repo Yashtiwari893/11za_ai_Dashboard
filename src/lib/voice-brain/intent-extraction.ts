@@ -100,11 +100,11 @@ export class IntentExtractor {
     }
 
     // Separate customer and agent turns
-    const customerTurns = turns.filter(turn => turn.role === 'customer');
-    const agentTurns = turns.filter(turn => turn.role === 'agent');
+    const customerTurns = turns.filter((turn: any) => turn.role === 'customer');
+    const agentTurns = turns.filter((turn: any) => turn.role === 'agent');
 
-    const customerQuestions = customerTurns.map(turn => turn.text);
-    const agentResponses = agentTurns.map(turn => turn.text);
+    const customerQuestions = customerTurns.map((turn: any) => turn.text);
+    const agentResponses = agentTurns.map((turn: any) => turn.text);
 
     // Extract primary intent
     const intentAnalysis = this.extractIntent(customerQuestions);

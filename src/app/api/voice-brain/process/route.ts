@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const recordings = calls.map(call => ({
+        const recordings = calls.map((call: any) => ({
             id: call.id,
             phoneNumber: call.phone_number,
             audioUrl: call.audio_url,
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
                     .eq('status', 'processed');
 
                 if (processedCalls && processedCalls.length > 0) {
-                    const rawTranscripts = processedCalls.map(call => ({
+                    const rawTranscripts = processedCalls.map((call: any) => ({
                         callId: call.id,
                         text: call.transcript || '',
                         language: call.language || 'hi',
@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Get summary stats
-        const statusCounts = data?.reduce((acc, call) => {
+        const statusCounts = data?.reduce((acc: any, call: any) => {
             acc[call.status] = (acc[call.status] || 0) + 1;
             return acc;
         }, {} as Record<string, number>) || {};

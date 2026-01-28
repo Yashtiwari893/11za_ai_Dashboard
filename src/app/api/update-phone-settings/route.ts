@@ -48,8 +48,8 @@ export async function POST(req: NextRequest) {
         // Also update credentials in all associated files for consistency
         if (auth_token !== undefined || origin !== undefined) {
             const fileIds = existingMappings
-                .map(m => m.file_id)
-                .filter(id => id !== null);
+                .map((m: any) => m.file_id)
+                .filter((id: any) => id !== null);
 
             if (fileIds.length > 0) {
                 const updateFileData: any = {};

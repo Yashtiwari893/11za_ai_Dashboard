@@ -1,6 +1,6 @@
 import { supabase } from "./supabaseClient";
 import { embedText } from "./embeddings";
-import { retrieveRelevantChunksFromFiles, retrieveRelevantShopifyChunks, retrieveRelevantVoiceChunks } from "./retrieval";
+import { retrieveRelevantChunksFromFiles, retrieveRelevantShopifyChunks, retrieveRelevantVoiceChunks, retrieveRelevantChunksDualSource } from "./retrieval";
 import { getFilesForPhoneNumber, getShopifyStoreForPhoneNumber, getAllDataSourcesForPhone } from "./phoneMapping";
 import { sendWhatsAppMessage, sendWhatsAppAudio } from "./whatsappSender";
 import { ttsManager, TTSManager, storeVoiceReply } from "./voice/tts";
@@ -207,14 +207,12 @@ export async function generateAutoResponse(
         // 3. Retrieve relevant chunks from ALL available data sources
         const retrievalPromises = [];
 
-        // File chunks
-        if (dataSources.files.length > 0) {
-            console.log(`Retrieving chunks from ${dataSources.files.length} files`);
-            retrievalPromises.push(
-                retrieveRelevantChunksFromFiles(queryEmbedding, dataSources.files, 5)
-                    .then(chunks => chunks.map(c => ({ ...c, source_type: 'file' })))
-            );
-        }
+        // File chunks + Call recordings (dual-source retrieval)
+        console.log(`Retrieving chunks from files and approved call recordings`);
+        retrievalPromises.push(
+            retrieveRelevantChunksDualSource(queryEmbedding, toNumber, 5)
+                .then(chunks => chunks.map((c: any) => ({ ...c, source_type: c.source_type || 'file' })))
+        );
 
         // Shopify chunks
         if (dataSources.shopifyStoreId) {
@@ -267,8 +265,8 @@ export async function generateAutoResponse(
 
         // Build conversation history (user messages and AI responses)
         const history = (historyRows || [])
-            .filter(m => m.content_text && (m.event_type === "MoMessage" || m.event_type === "MtMessage"))
-            .map(m => ({
+            .filter((m: any) => m.content_text && (m.event_type === "MoMessage" || m.event_type === "MtMessage"))
+            .map((m: any) => ({
                 role: m.event_type === "MoMessage" ? "user" as const : "assistant" as const,
                 content: m.content_text
             }));

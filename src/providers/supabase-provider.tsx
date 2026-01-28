@@ -1,7 +1,7 @@
 'use client'
 
-import { createClient } from '@/utils/supabase/client'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabaseClient'
+import { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import { Session, User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 
@@ -20,15 +20,25 @@ export default function SupabaseProvider({
   children: React.ReactNode
   session: Session | null
 }) {
-  const supabase = createClient()
+  // Use the singleton memoized client
+  const supabase = useMemo(() => createClient(), [])
   const [user, setUser] = useState<User | null>(session?.user ?? null)
   const router = useRouter()
 
   useEffect(() => {
+    // Get the authenticated user securely from the server
+    const getAuthenticatedUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user ?? null)
+    }
+
+    getAuthenticatedUser()
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+    } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+      // When auth state changes, fetch the secure user object
+      getAuthenticatedUser()
       router.refresh()
     })
 
