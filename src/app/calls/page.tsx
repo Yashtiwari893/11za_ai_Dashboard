@@ -78,31 +78,14 @@ export default function CallsPage() {
 
     const loadPhoneGroups = useCallback(async () => {
         try {
-            // Get auth token from session
-            const { data: { session } } = await (await import("@/lib/supabaseClient")).supabase.auth.getSession();
-            const token = session?.access_token;
-
-            if (!token) {
-                router.push("/login");
-                return;
-            }
-
-            const res = await fetch("/api/phone-groups", {
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
-            });
+            const res = await fetch("/api/phone-groups");
             const data = await res.json();
             if (data.success) {
                 // For each phone group, load calls
                 const groupsWithCalls = await Promise.all(
                     (data.groups || []).map(async (group: PhoneNumberGroup) => {
                         try {
-                            const callsRes = await fetch(`/api/calls?phone_number=${group.phone_number}`, {
-                                headers: {
-                                    "Authorization": `Bearer ${token}`
-                                }
-                            });
+                            const callsRes = await fetch(`/api/calls?phone_number=${group.phone_number}`);
                             const callsData = await callsRes.json();
                             return {
                                 ...group,
@@ -122,7 +105,7 @@ export default function CallsPage() {
         } catch (error) {
             console.error("Error loading phone groups:", error);
         }
-    }, [router]);
+    }, []);
 
     // Start polling when there are calls being processed
     useEffect(() => {
@@ -456,9 +439,31 @@ export default function CallsPage() {
                                 </h2>
                                 {selectedPhoneNumber && (
                                     <button
-                                        onClick={() => {
+                                        onClick={async () => {
                                             if (!confirm("Delete this phone number and all associated calls?")) return;
-                                            alert("Delete functionality not yet implemented for calls");
+                                            try {
+                                                const res = await fetch("/api/phone-groups", {
+                                                    method: "DELETE",
+                                                    headers: {
+                                                        "Content-Type": "application/json",
+                                                    },
+                                                    body: JSON.stringify({ phoneNumber: selectedPhoneNumber }),
+                                                });
+
+                                                const result = await res.json();
+
+                                                if (!res.ok) {
+                                                    alert("Error: " + (result.error || "Failed to delete phone number"));
+                                                    return;
+                                                }
+
+                                                alert("Phone number deleted successfully!");
+                                                setSelectedPhoneNumber(null);
+                                                await loadPhoneGroups();
+                                            } catch (error) {
+                                                console.error("Delete error:", error);
+                                                alert("Error deleting phone number: " + (error instanceof Error ? error.message : "Unknown error"));
+                                            }
                                         }}
                                         className="px-4 py-2 text-sm text-red-600 border border-red-600 rounded-md hover:bg-red-50"
                                     >

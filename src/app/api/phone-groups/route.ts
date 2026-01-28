@@ -1,16 +1,30 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function GET(req: Request) {
     try {
-        // Verify authentication
-        const authHeader = req.headers.get("authorization");
-        if (!authHeader?.startsWith("Bearer ")) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        // Verify authentication using cookies
+        const cookieStore = await cookies();
+        const supabaseServer = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    getAll() {
+                        return cookieStore.getAll();
+                    },
+                    setAll(cookiesToSet: any) {
+                        cookiesToSet.forEach(({ name, value, options }: any) => {
+                            cookieStore.set(name, value, options);
+                        });
+                    },
+                },
+            }
+        );
 
-        const token = authHeader.slice(7);
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        const { data: { user }, error: authError } = await supabaseServer.auth.getUser();
 
         if (authError || !user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -95,6 +109,76 @@ export async function GET(req: Request) {
             {
                 success: false,
                 error: error instanceof Error ? error.message : "Failed to fetch phone groups",
+            },
+            { status: 500 }
+        );
+    }
+}
+
+export async function DELETE(req: Request) {
+    try {
+        // Verify authentication using cookies
+        const cookieStore = await (await import("next/headers")).cookies();
+        const { createServerClient } = await import("@supabase/ssr");
+        const supabaseServer = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    getAll() {
+                        return cookieStore.getAll();
+                    },
+                    setAll(cookiesToSet: any) {
+                        cookiesToSet.forEach(({ name, value, options }: any) => {
+                            cookieStore.set(name, value, options);
+                        });
+                    },
+                },
+            }
+        );
+
+        const { data: { user }, error: authError } = await supabaseServer.auth.getUser();
+
+        if (authError || !user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const { phoneNumber } = await req.json();
+
+        if (!phoneNumber) {
+            return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
+        }
+
+        // Delete all phone mappings for this phone number
+        const { error: deleteMappingError } = await supabase
+            .from("phone_document_mapping")
+            .delete()
+            .eq("phone_number", phoneNumber);
+
+        if (deleteMappingError) {
+            throw deleteMappingError;
+        }
+
+        // Delete all call recordings for this phone number
+        const { error: deleteCallsError } = await supabase
+            .from("call_recordings")
+            .delete()
+            .eq("phone_number", phoneNumber);
+
+        if (deleteCallsError) {
+            throw deleteCallsError;
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: `Phone number ${phoneNumber} and all associated data deleted successfully`,
+        });
+    } catch (error) {
+        console.error("Error deleting phone group:", error);
+        return NextResponse.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to delete phone group",
             },
             { status: 500 }
         );
