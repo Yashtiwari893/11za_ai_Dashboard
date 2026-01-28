@@ -128,7 +128,7 @@ export default function DashboardPage() {
       description: "Upload and process call recordings with AI transcription",
       icon: Phone,
       href: "/calls",
-      color: "bg-gradient-to-br from-[#6366f1] to-[#8b5cf6]",
+      color: "bg-gradient-to-br from-[#7bdcb5] to-[#09AF72]",
       status: "Active",
       formats: ["MP3", "WAV", "OGG"]
     },

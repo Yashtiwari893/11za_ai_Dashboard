@@ -1,8 +1,21 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        // Verify authentication
+        const authHeader = req.headers.get("authorization");
+        if (!authHeader?.startsWith("Bearer ")) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const token = authHeader.slice(7);
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+        if (authError || !user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         // Get all phone mappings with file details
         const { data: mappings, error: mappingError } = await supabase
             .from("phone_document_mapping")

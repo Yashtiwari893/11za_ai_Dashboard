@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileUpload } from "@/components/ui/file-upload";
+import { useSupabase } from "@/providers/supabase-provider";
 
 type CallItem = {
     id: string;
@@ -35,6 +37,8 @@ type PhoneNumberGroup = {
 };
 
 export default function CallsPage() {
+    const router = useRouter();
+    const { user } = useSupabase();
     const [phoneGroups, setPhoneGroups] = useState<PhoneNumberGroup[]>([]);
     const [uploading, setUploading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -46,6 +50,13 @@ export default function CallsPage() {
         current: string;
         failed: number;
     } | null>(null);
+
+    // Check authentication
+    useEffect(() => {
+        if (!user) {
+            router.push("/login");
+        }
+    }, [user, router]);
 
     // Selected phone number in the left panel
     const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<string | null>(null);
@@ -66,31 +77,52 @@ export default function CallsPage() {
     const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
     const loadPhoneGroups = useCallback(async () => {
-        const res = await fetch("/api/phone-groups");
-        const data = await res.json();
-        if (data.success) {
-            // For each phone group, load calls
-            const groupsWithCalls = await Promise.all(
-                (data.groups || []).map(async (group: PhoneNumberGroup) => {
-                    try {
-                        const callsRes = await fetch(`/api/calls?phone_number=${group.phone_number}`);
-                        const callsData = await callsRes.json();
-                        return {
-                            ...group,
-                            calls: callsData.calls || []
-                        };
-                    } catch (error) {
-                        console.error(`Error loading calls for ${group.phone_number}:`, error);
-                        return {
-                            ...group,
-                            calls: []
-                        };
-                    }
-                })
-            );
-            setPhoneGroups(groupsWithCalls);
+        try {
+            // Get auth token from session
+            const { data: { session } } = await (await import("@/lib/supabaseClient")).supabase.auth.getSession();
+            const token = session?.access_token;
+
+            if (!token) {
+                router.push("/login");
+                return;
+            }
+
+            const res = await fetch("/api/phone-groups", {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (data.success) {
+                // For each phone group, load calls
+                const groupsWithCalls = await Promise.all(
+                    (data.groups || []).map(async (group: PhoneNumberGroup) => {
+                        try {
+                            const callsRes = await fetch(`/api/calls?phone_number=${group.phone_number}`, {
+                                headers: {
+                                    "Authorization": `Bearer ${token}`
+                                }
+                            });
+                            const callsData = await callsRes.json();
+                            return {
+                                ...group,
+                                calls: callsData.calls || []
+                            };
+                        } catch (error) {
+                            console.error(`Error loading calls for ${group.phone_number}:`, error);
+                            return {
+                                ...group,
+                                calls: []
+                            };
+                        }
+                    })
+                );
+                setPhoneGroups(groupsWithCalls);
+            }
+        } catch (error) {
+            console.error("Error loading phone groups:", error);
         }
-    }, []);
+    }, [router]);
 
     // Start polling when there are calls being processed
     useEffect(() => {
