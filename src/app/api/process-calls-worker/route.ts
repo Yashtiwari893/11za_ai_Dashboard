@@ -10,7 +10,7 @@ import { chunkText } from "@/lib/chunk";
 import { embedText } from "@/lib/embeddings";
 
 export const runtime = "nodejs";
-export const maxDuration = 900; // 15 minutes
+export const maxDuration = 300; // 5 minutes (Vercel hobby plan limit)
 
 type ProcessingRequest = {
     callId?: string;
