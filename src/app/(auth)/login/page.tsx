@@ -10,6 +10,17 @@ import { Label } from '@/components/ui/label'
 import { AlertCircle, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 
+/**
+ * ============================================
+ * LOGIN PAGE WITH ROLE-BASED ROUTING
+ * ============================================
+ * 
+ * After successful login, users are redirected to:
+ * - /admin for admin users
+ * - /user for regular users
+ * 
+ * This ensures each user sees only the appropriate dashboard.
+ */
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -25,19 +36,45 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // Step 1: Sign in with Supabase
+      const { error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) {
-        setError(error.message)
-      } else {
-        router.push('/dashboard')
+      if (authError) {
+        setError(authError.message)
+        setLoading(false)
+        return
       }
+
+      // Step 2: Fetch user's role from database
+      const { data: userProfile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('role, is_active')
+        .eq('email', email)
+        .single()
+
+      if (profileError || !userProfile) {
+        setError('User profile not found')
+        setLoading(false)
+        return
+      }
+
+      // Step 3: Check if user is active
+      if (!userProfile.is_active) {
+        setError('Your account has been deactivated. Please contact support.')
+        // Sign out the user immediately
+        await supabase.auth.signOut()
+        setLoading(false)
+        return
+      }
+
+      // Step 4: Redirect based on role
+      const dashboardPath = userProfile.role === 'admin' ? '/admin' : '/user'
+      router.push(dashboardPath)
     } catch (err) {
       setError('An unexpected error occurred')
-    } finally {
       setLoading(false)
     }
   }

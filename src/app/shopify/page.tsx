@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Store, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
+import { ProtectedRoute } from "@/components/protected-route";
 
 type ShopifyStore = {
     id: string;
@@ -17,7 +18,7 @@ type ShopifyStore = {
     created_at: string;
 };
 
-export default function ShopifyPage() {
+function ShopifyPageContent() {
     const [stores, setStores] = useState<ShopifyStore[]>([]);
     const [loading, setLoading] = useState(true);
     const [settingUp, setSettingUp] = useState(false);
@@ -431,5 +432,13 @@ export default function ShopifyPage() {
                 </TabsContent>
             </Tabs>
         </div>
+    );
+}
+
+export default function ShopifyPage() {
+    return (
+        <ProtectedRoute>
+            <ShopifyPageContent />
+        </ProtectedRoute>
     );
 }

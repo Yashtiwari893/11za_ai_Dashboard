@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Switch } from "@/components/ui/switch";
+import { ProtectedRoute } from "@/components/protected-route";
 
 type FileItem = {
     id: string;
@@ -22,7 +23,7 @@ type PhoneNumberGroup = {
     origin: string;
 };
 
-export default function FilesPage() {
+function FilesPageContent() {
     const [phoneGroups, setPhoneGroups] = useState<PhoneNumberGroup[]>([]);
     const [uploading, setUploading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -610,5 +611,13 @@ export default function FilesPage() {
                 </div>
             </div>
         </main>
+    );
+}
+
+export default function FilesPage() {
+    return (
+        <ProtectedRoute>
+            <FilesPageContent />
+        </ProtectedRoute>
     );
 }

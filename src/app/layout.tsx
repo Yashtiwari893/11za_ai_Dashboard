@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SupabaseProvider from "@/providers/supabase-provider";
+import { AuthProvider } from "@/contexts/auth-context";
 import { createClient } from "@/utils/supabase/server";
 import LiveVoiceAgentInitializer from "@/components/live-voice-agent-initializer";
 import ConditionalLayout from "@/components/conditional-layout";
@@ -36,12 +37,14 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SupabaseProvider session={session}>
-          <LiveVoiceAgentInitializer />
-          <ConditionalLayout>
-            {children}
-          </ConditionalLayout>
-        </SupabaseProvider>
+        <AuthProvider>
+          <SupabaseProvider session={session}>
+            <LiveVoiceAgentInitializer />
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
+          </SupabaseProvider>
+        </AuthProvider>
       </body>
     </html>
   );

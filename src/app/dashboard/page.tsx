@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { ProtectedRoute } from "@/components/protected-route";
 
 interface DashboardStats {
   totalConversations: number;
@@ -29,7 +30,7 @@ interface DashboardStats {
   loading: boolean;
 }
 
-export default function DashboardPage() {
+function DashboardPageContent() {
   const [stats, setStats] = useState<DashboardStats>({
     totalConversations: 0,
     voiceMessages: 0,
@@ -348,5 +349,13 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardPageContent />
+    </ProtectedRoute>
   );
 }

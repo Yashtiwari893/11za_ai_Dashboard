@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Moon, Sun, Globe, Bell, Shield, Palette, Bot, Phone, Plus, Trash2, CheckCircle } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import { ProtectedRoute } from "@/components/protected-route";
 
 interface PhoneGroup {
   id: string;
@@ -28,7 +29,7 @@ interface LocalSettings {
   autoSave: boolean;
 }
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   // Local UI Settings
   const [darkMode, setDarkMode] = useState(false);
   const [language, setLanguage] = useState("en");
@@ -534,5 +535,13 @@ export default function SettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <ProtectedRoute>
+      <SettingsPageContent />
+    </ProtectedRoute>
   );
 }

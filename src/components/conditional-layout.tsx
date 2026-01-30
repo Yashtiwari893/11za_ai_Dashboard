@@ -1,10 +1,28 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useSupabase } from '@/providers/supabase-provider'
 import Sidebar from '@/components/sidebar'
 import Footer from '@/components/footer'
 
 const AUTH_PAGES = ['/login', '/signup', '/forgot-password', '/reset-password']
+
+const PROTECTED_ROUTES = [
+  '/dashboard',
+  '/chat',
+  '/files',
+  '/settings',
+  '/shopify',
+  '/ocr',
+  '/admin',
+  '/user',
+  '/super-admin',
+  '/live-voice-agent',
+  '/calls',
+  '/voice',
+  '/voice-brain'
+]
 
 export default function ConditionalLayout({
   children,
@@ -12,9 +30,67 @@ export default function ConditionalLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { supabase } = useSupabase()
+  const [checkComplete, setCheckComplete] = useState(false)
+  const [isAuthorized, setIsAuthorized] = useState(false)
   
   // Check if current page is an auth page
   const isAuthPage = AUTH_PAGES.some(page => pathname === page || pathname.startsWith(page + '/'))
+  
+  // Check if current page is a protected route
+  const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route))
+
+  useEffect(() => {
+    if (isAuthPage) {
+      // Auth pages don't need protection check
+      setCheckComplete(true)
+      setIsAuthorized(true)
+      return
+    }
+
+    if (!isProtectedRoute) {
+      // Non-protected pages (like home) can be accessed
+      setCheckComplete(true)
+      setIsAuthorized(true)
+      return
+    }
+
+    // Protected route - check auth immediately
+    const checkAuth = async () => {
+      try {
+        const {
+          data: { session }
+        } = await supabase.auth.getSession()
+
+        if (!session || !session.user) {
+          // No session - redirect to login IMMEDIATELY
+          router.push('/login')
+          return
+        }
+
+        // Session exists - authorize access
+        setIsAuthorized(true)
+      } catch (error) {
+        console.error('[ConditionalLayout] Auth check error:', error)
+        router.push('/login')
+      } finally {
+        setCheckComplete(true)
+      }
+    }
+
+    checkAuth()
+  }, [pathname, isAuthPage, isProtectedRoute, router, supabase])
+
+  // While checking auth on protected routes, show nothing (transparent redirect)
+  if (isProtectedRoute && !checkComplete) {
+    return null
+  }
+
+  // If auth check failed on protected route, component won't render
+  if (isProtectedRoute && !isAuthorized) {
+    return null
+  }
 
   if (isAuthPage) {
     return (

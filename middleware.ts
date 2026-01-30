@@ -37,29 +37,93 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // Define protected routes
+  // Define protected routes - ALL dashboard routes MUST be here
   const protectedRoutes = [
     '/dashboard',
     '/chat',
     '/files',
     '/settings',
     '/shopify',
-    '/ocr'
+    '/ocr',
+    '/admin',
+    '/user',
+    '/super-admin',
+    '/live-voice-agent',
+    '/calls',
+    '/voice',
+    '/voice-brain'
   ]
+
+  // Route-to-required-role mapping
+  const roleRequiredRoutes: Record<string, string[]> = {
+    '/admin': ['admin', 'super_admin'],
+    '/super-admin': ['super_admin'],
+    '/user': ['user', 'admin', 'team_admin', 'super_admin'],
+    '/dashboard': ['user', 'admin', 'team_admin', 'super_admin'],
+    '/chat': ['user', 'admin', 'team_admin', 'super_admin'],
+    '/files': ['user', 'admin', 'team_admin', 'super_admin'],
+    '/settings': ['user', 'admin', 'team_admin', 'super_admin'],
+    '/calls': ['user', 'admin', 'team_admin', 'super_admin'],
+    '/live-voice-agent': ['admin', 'super_admin'],
+    '/voice': ['user', 'admin', 'team_admin', 'super_admin'],
+    '/voice-brain': ['admin', 'super_admin']
+  }
 
   // Check if current path is protected
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 
-  // Protect dashboard and other routes
+  // STEP 1: Enforce authentication
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
+  // STEP 2: Enforce role-based access (get user role from database)
+  if (isProtectedRoute && user) {
+    // Get the required role for this route
+    const requiredRole = Object.entries(roleRequiredRoutes).find(
+      ([route]) => pathname.startsWith(route)
+    )?.[1]
+
+    if (requiredRole) {
+      try {
+        // Fetch user role from database
+        const { data: userProfile } = await supabase
+          .from('user_profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        const userRole = userProfile?.role
+
+        // Check if user has required role
+        if (userRole && !requiredRole.includes(userRole)) {
+          const url = request.nextUrl.clone()
+          // Redirect to appropriate dashboard based on their actual role
+          if (userRole === 'super_admin') {
+            url.pathname = '/super-admin'
+          } else if (userRole === 'admin' || userRole === 'team_admin') {
+            url.pathname = '/admin'
+          } else {
+            url.pathname = '/user'
+          }
+          return NextResponse.redirect(url)
+        }
+      } catch (error) {
+        console.error('[Middleware] Role check error:', error)
+        // On error, redirect to login as safety measure
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        return NextResponse.redirect(url)
+      }
+    }
+  }
+
   // Redirect authenticated users away from auth pages
   if ((pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password' || pathname === '/reset-password') && user) {
     const url = request.nextUrl.clone()
+    // For authenticated users, redirect to dashboard (role-specific redirect happens in login page)
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }

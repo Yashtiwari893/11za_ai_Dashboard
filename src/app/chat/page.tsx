@@ -8,6 +8,7 @@ import { v4 as uuid } from "uuid";
 import ReactMarkdown from "react-markdown";
 import { Bot } from "lucide-react";
 import Link from "next/link";
+import { ProtectedRoute } from "@/components/protected-route";
 
 type ChatMessage = {
     role: "user" | "assistant";
@@ -19,7 +20,7 @@ type FileItem = {
     name: string;
 };
 
-export default function ChatPage() {
+function ChatPageContent() {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState("");
     const [sessionId, setSessionId] = useState<string | null>(null);
@@ -322,5 +323,13 @@ export default function ChatPage() {
                 </>
             )}
         </main>
+    );
+}
+
+export default function ChatPage() {
+    return (
+        <ProtectedRoute>
+            <ChatPageContent />
+        </ProtectedRoute>
     );
 }
